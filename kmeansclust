@@ -1,0 +1,15 @@
+MLContext mLContext = new MLContext();
+            IDataView trainingdataview = mLContext.Data.LoadFromTextFile<Daibetes>("C:\\Users\\923400221916\\Downloads\\archive (3)\\dataset.csv", hasHeader: true, separatorChar: ',');
+            var dataPreparationPipeline=mLContext.Transforms.Conversion.MapValueToKey(nameof(Daibetes.Label))
+                .Append(mLContext.Transforms.Concatenate("Features",nameof(Daibetes.glcouse), nameof(Daibetes.bloodpressure)));
+            var kmeansclusting = dataPreparationPipeline.Append(mLContext.Clustering.Trainers.KMeans(featureColumnName: "Features", numberOfClusters: 2));
+            var model=kmeansclusting.Fit(trainingdataview);
+            var metrics=mLContext.MulticlassClassification.Evaluate(model.Transform(trainingdataview));
+            MessageBox.Show(metrics.ConfusionMatrix.GetFormattedConfusionTable().ToString());
+            Daibetes db = new Daibetes() {
+            glcouse=45,
+            bloodpressure=80,
+            };
+            var predictor = mLContext.Model.CreatePredictionEngine<Daibetes, Diabetesoutput>(model);
+            var predictortype = predictor.Predict(db);
+            MessageBox.Show(predictortype.PredictedLabels == 1 ? "Non-diabtes" : "Diabetes");
